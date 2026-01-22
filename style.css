@@ -1,20 +1,42 @@
-body { margin: 0; font-family: Arial, sans-serif; }
+body {
+  margin: 0;
+  font-family: Arial, sans-serif;
+  background: #f9fafb;
+}
 
 .header {
   padding: 12px 16px;
   background: #111827;
   color: white;
 }
-.header h2 { margin: 0; }
-.header p { margin: 4px 0 0; opacity: 0.8; }
+
+.header h2 {
+  margin: 0;
+  font-size: 20px;
+}
+
+.header p {
+  margin: 6px 0 0;
+  opacity: 0.8;
+  font-size: 13px;
+}
 
 .controls {
   padding: 10px 16px;
   display: flex;
-  gap: 14px;
+  gap: 16px;
   flex-wrap: wrap;
+  align-items: center;
   background: #f3f4f6;
   border-bottom: 1px solid #e5e7eb;
+  font-size: 14px;
+}
+
+.controls select {
+  padding: 6px 10px;
+  border-radius: 6px;
+  border: 1px solid #d1d5db;
+  background: white;
 }
 
 .main {
@@ -23,7 +45,10 @@ body { margin: 0; font-family: Arial, sans-serif; }
   height: calc(100vh - 140px);
 }
 
-#map { width: 100%; height: 100%; }
+#map {
+  width: 100%;
+  height: 100%;
+}
 
 .panel {
   border-left: 1px solid #e5e7eb;
@@ -32,22 +57,46 @@ body { margin: 0; font-family: Arial, sans-serif; }
   background: white;
 }
 
+.panel h3 {
+  margin: 0 0 10px;
+  font-size: 18px;
+}
+
 #searchBox {
   width: 100%;
   padding: 8px;
   margin-bottom: 10px;
   border: 1px solid #e5e7eb;
   border-radius: 6px;
+  font-size: 14px;
 }
 
-table { width: 100%; border-collapse: collapse; font-size: 13px; }
-th, td { padding: 6px; border-bottom: 1px solid #e5e7eb; }
+table {
+  width: 100%;
+  border-collapse: collapse;
+  font-size: 13px;
+}
+
+th, td {
+  padding: 8px 6px;
+  border-bottom: 1px solid #e5e7eb;
+  text-align: left;
+}
 
 th {
   background: #f9fafb;
   position: sticky;
   top: 0;
+  z-index: 10;
 }
 
-tr:hover { background: #eef2ff; cursor: pointer; }
+tr:hover {
+  background: #eef2ff;
+  cursor: pointer;
+}
 
+.note {
+  font-size: 12px;
+  color: #6b7280;
+  margin-top: 10px;
+}
