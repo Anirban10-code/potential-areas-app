@@ -1,87 +1,117 @@
 // ------------------ MAP INIT ------------------
-const map = L.map('map').setView([12.9716, 77.5946], 11);
+const map = L.map("map").setView([12.9716, 77.5946], 11);
 
-L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
-  maxZoom: 19
+L.tileLayer("https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png", {
+  maxZoom: 19,
 }).addTo(map);
 
 let wardsLayer = null;
-let centroidsLayer = null;
-
 let wardsData = null;
-let centroidsData = null;
+let csvRows = [];
 
-// ------------------ LOAD DATA ------------------
+// ------------------ HELPERS ------------------
+function getWardName(props) {
+  return props.ward_name || props.ward_name_ || props.name || "Unknown Ward";
+}
+
+function getScore(obj) {
+  return Number(obj.OpportunityScore || obj.potential_score || obj.demandScore || 0);
+}
+
+// ------------------ LOAD GEOJSON ------------------
 async function loadGeoJSON(path) {
   const res = await fetch(path);
   return await res.json();
 }
 
-function getWardName(props) {
-  return props.ward_name || props.ward_name_ || props.ward || props.name || "Unknown Ward";
+// ------------------ LOAD CSV ------------------
+// Simple CSV parser (works for normal CSV)
+async function loadCSV(path) {
+  const res = await fetch(path);
+  const text = await res.text();
+
+  const lines = text.trim().split("\n");
+  const headers = lines[0].split(",").map(h => h.trim());
+
+  return lines.slice(1).map(line => {
+    // handles commas safely (basic)
+    const values = line.split(",").map(v => v.trim());
+    let obj = {};
+    headers.forEach((h, i) => obj[h] = values[i]);
+    return obj;
+  });
 }
 
-function getScore(props) {
-  return Number(props.OpportunityScore || props.potential_score || props.demandScore || 0);
+// ------------------ MERGE CSV DATA INTO GEOJSON ------------------
+function mergeCSVtoGeoJSON(geojson, csvData) {
+  // Create lookup: ward_id OR ward_name
+  const lookup = {};
+
+  csvData.forEach(row => {
+    const wid = row.ward_id || row.wardId || row.id;
+    const wname = row.ward_name || row.ward_name_ || row.WardName;
+    if (wid) lookup["id_" + wid] = row;
+    if (wname) lookup["name_" + wname.toLowerCase()] = row;
+  });
+
+  geojson.features.forEach(f => {
+    const p = f.properties || {};
+    const wid = p.ward_id || p.wardId || p.id;
+    const wname = getWardName(p);
+
+    let row = null;
+    if (wid && lookup["id_" + wid]) row = lookup["id_" + wid];
+    else if (wname && lookup["name_" + wname.toLowerCase()]) row = lookup["name_" + wname.toLowerCase()];
+
+    if (row) {
+      // Add CSV fields into GeoJSON properties
+      f.properties = { ...p, ...row };
+    }
+  });
+
+  return geojson;
 }
 
 // ------------------ RENDER WARDS ------------------
 function renderWards(topN) {
   if (wardsLayer) map.removeLayer(wardsLayer);
 
-  const sorted = [...wardsData.features].sort((a, b) => getScore(b.properties) - getScore(a.properties));
+  // sort by OpportunityScore
+  const sorted = [...wardsData.features].sort((a, b) =>
+    getScore(b.properties) - getScore(a.properties)
+  );
+
   const selected = sorted.slice(0, topN);
 
   wardsLayer = L.geoJSON(selected, {
-    style: () => ({
+    style: (feature) => ({
       color: "#111827",
       weight: 2,
-      fillOpacity: 0.15
+      fillOpacity: 0.15,
     }),
     onEachFeature: (feature, layer) => {
       const p = feature.properties;
       layer.bindPopup(`
-        <b>${getWardName(p)}</b><br/>
-        <b>OpportunityScore:</b> ${getScore(p).toFixed(3)}<br/>
+        <b>${p.ward_name || p.ward_name_ || "Ward"}</b><br/>
+        <b>OpportunityScore:</b> ${Number(p.OpportunityScore || 0).toFixed(2)}<br/>
         <b>GymCount:</b> ${p.GymCount ?? "-"}<br/>
         <b>CafeCount:</b> ${p.CafeCount ?? "-"}<br/>
-        <b>Growth:</b> ${p.growthMean ?? p.Growth ?? "-"}<br/>
-        <b>NDBI:</b> ${p.ndbiMean ?? p.NDBI ?? "-"}
+        <b>GrowthMean:</b> ${p.growthMean ?? p.Growth ?? "-"}<br/>
+        <b>NDBI Mean:</b> ${p.ndbiMean ?? p.NDBI ?? "-"}<br/>
+        <b>Zone:</b> ${p.zone_name ?? p.zone ?? "-"}
       `);
-    }
+    },
   }).addTo(map);
 
   map.fitBounds(wardsLayer.getBounds());
 }
 
-// ------------------ RENDER CENTROIDS ------------------
-function renderCentroids(topN) {
-  if (centroidsLayer) map.removeLayer(centroidsLayer);
-
-  const sorted = [...centroidsData.features].sort((a, b) => getScore(b.properties) - getScore(a.properties));
-  const selected = sorted.slice(0, topN);
-
-  centroidsLayer = L.geoJSON(selected, {
-    pointToLayer: (feature, latlng) => L.circleMarker(latlng, {
-      radius: 6,
-      weight: 2,
-      fillOpacity: 0.9
-    }),
-    onEachFeature: (feature, layer) => {
-      const p = feature.properties;
-      layer.bindPopup(`
-        <b>${getWardName(p)}</b><br/>
-        <b>OpportunityScore:</b> ${getScore(p).toFixed(3)}<br/>
-        <b>GymCount:</b> ${p.GymCount ?? "-"}<br/>
-        <b>CafeCount:</b> ${p.CafeCount ?? "-"}
-      `);
-    }
-  }).addTo(map);
-}
-
 // ------------------ TABLE ------------------
 function renderTable(topN) {
-  const sorted = [...wardsData.features].sort((a, b) => getScore(b.properties) - getScore(a.properties));
+  const sorted = [...wardsData.features].sort((a, b) =>
+    getScore(b.properties) - getScore(a.properties)
+  );
+
   const selected = sorted.slice(0, topN);
 
   let html = `<table>
@@ -103,7 +133,7 @@ function renderTable(topN) {
       <tr data-rank="${i}">
         <td>${i + 1}</td>
         <td>${getWardName(p)}</td>
-        <td>${getScore(p).toFixed(3)}</td>
+        <td>${Number(p.OpportunityScore || 0).toFixed(2)}</td>
         <td>${p.GymCount ?? "-"}</td>
         <td>${p.CafeCount ?? "-"}</td>
       </tr>
@@ -113,7 +143,7 @@ function renderTable(topN) {
   html += `</tbody></table>`;
   document.getElementById("tableWrap").innerHTML = html;
 
-  // click row zoom
+  // Row click -> zoom to ward
   document.querySelectorAll("tbody tr").forEach((row, idx) => {
     row.addEventListener("click", () => {
       const feature = selected[idx];
@@ -123,21 +153,6 @@ function renderTable(topN) {
   });
 }
 
-// ------------------ UI ------------------
-function updateUI() {
-  const topN = Number(document.getElementById("topN").value);
-  const showWards = document.getElementById("showWards").checked;
-  const showCentroids = document.getElementById("showCentroids").checked;
-
-  if (showWards) renderWards(topN);
-  else if (wardsLayer) map.removeLayer(wardsLayer);
-
-  if (showCentroids) renderCentroids(topN);
-  else if (centroidsLayer) map.removeLayer(centroidsLayer);
-
-  renderTable(topN);
-}
-
 // ------------------ SEARCH ------------------
 function setupSearch() {
   const search = document.getElementById("searchBox");
@@ -145,25 +160,32 @@ function setupSearch() {
     const q = search.value.toLowerCase();
     const rows = document.querySelectorAll("tbody tr");
 
-    rows.forEach(row => {
+    rows.forEach((row) => {
       const ward = row.children[1].innerText.toLowerCase();
       row.style.display = ward.includes(q) ? "" : "none";
     });
   });
 }
 
+// ------------------ UPDATE UI ------------------
+function updateUI() {
+  const topN = Number(document.getElementById("topN").value);
+  renderWards(topN);
+  renderTable(topN);
+}
+
 // ------------------ INIT ------------------
 async function init() {
   wardsData = await loadGeoJSON("data/wards.geojson");
-  centroidsData = await loadGeoJSON("data/centroids.geojson");
+  csvRows = await loadCSV("data/ward_data.csv");
+
+  // merge csv into geojson
+  wardsData = mergeCSVtoGeoJSON(wardsData, csvRows);
 
   updateUI();
   setupSearch();
 
   document.getElementById("topN").addEventListener("change", updateUI);
-  document.getElementById("showWards").addEventListener("change", updateUI);
-  document.getElementById("showCentroids").addEventListener("change", updateUI);
 }
 
 init();
-
