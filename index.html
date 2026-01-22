@@ -5,27 +5,27 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <title>Potential Areas Finder</title>
 
+  <!-- Leaflet CSS -->
   <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css"/>
+
+  <!-- Your CSS -->
   <link rel="stylesheet" href="style.css" />
 </head>
 
 <body>
   <div class="header">
     <h2>Potential Areas Finder</h2>
-    <p>Select the city and view potential wards for gym expansion</p>
+    <p>Interactive map showing high-opportunity wards (Bangalore)</p>
   </div>
 
   <div class="controls">
-    <label>City:</label>
-    <select id="citySelect">
-      <option value="bangalore">Bangalore</option>
-    </select>
-
     <label>Top N:</label>
     <select id="topN">
       <option value="10">Top 10</option>
       <option value="20">Top 20</option>
-      <option value="50" selected>Top 50</option>
+      <option value="50">Top 50</option>
+      <option value="100">Top 100</option>
+      <option value="9999" selected>All</option>
     </select>
 
     <label><input type="checkbox" id="showWards" checked /> Show Wards</label>
@@ -39,11 +39,19 @@
       <h3>Ranking Table</h3>
       <input id="searchBox" placeholder="Search ward..." />
       <div id="tableWrap"></div>
+      <p class="note">
+        Click a row to zoom to the ward.
+      </p>
     </div>
   </div>
 
+  <!-- Leaflet JS -->
   <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
+
+  <!-- PapaParse for CSV parsing (VERY IMPORTANT) -->
+  <script src="https://cdn.jsdelivr.net/npm/papaparse@5.4.1/papaparse.min.js"></script>
+
+  <!-- Your JS -->
   <script src="app.js"></script>
 </body>
 </html>
-
