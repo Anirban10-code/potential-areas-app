@@ -1,1 +1,49 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Potential Areas Finder</title>
+
+  <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css"/>
+  <link rel="stylesheet" href="style.css" />
+</head>
+
+<body>
+  <div class="header">
+    <h2>Potential Areas Finder</h2>
+    <p>Select the city and view potential wards for gym expansion</p>
+  </div>
+
+  <div class="controls">
+    <label>City:</label>
+    <select id="citySelect">
+      <option value="bangalore">Bangalore</option>
+    </select>
+
+    <label>Top N:</label>
+    <select id="topN">
+      <option value="10">Top 10</option>
+      <option value="20">Top 20</option>
+      <option value="50" selected>Top 50</option>
+    </select>
+
+    <label><input type="checkbox" id="showWards" checked /> Show Wards</label>
+    <label><input type="checkbox" id="showCentroids" checked /> Show Centroids</label>
+  </div>
+
+  <div class="main">
+    <div id="map"></div>
+
+    <div class="panel">
+      <h3>Ranking Table</h3>
+      <input id="searchBox" placeholder="Search ward..." />
+      <div id="tableWrap"></div>
+    </div>
+  </div>
+
+  <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
+  <script src="app.js"></script>
+</body>
+</html>
 
