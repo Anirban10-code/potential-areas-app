@@ -3,19 +3,23 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>Potential Areas Finder</title>
+  <title>Potential Areas Finder – Bangalore</title>
 
-  <!-- Leaflet CSS -->
+  <!-- Leaflet -->
   <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css"/>
 
-  <!-- Your CSS -->
+  <!-- Google Font -->
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600&display=swap" rel="stylesheet">
+
+  <!-- App CSS -->
   <link rel="stylesheet" href="style.css" />
 </head>
 
 <body>
+
   <div class="header">
     <h2>Potential Areas Finder</h2>
-    <p>Interactive map showing high-opportunity wards (Bangalore)</p>
+    <p>High-opportunity wards identified using satellite growth & amenity demand</p>
   </div>
 
   <div class="controls">
@@ -36,22 +40,17 @@
     <div id="map"></div>
 
     <div class="panel">
-      <h3>Ranking Table</h3>
+      <h3>Ward Ranking</h3>
       <input id="searchBox" placeholder="Search ward..." />
       <div id="tableWrap"></div>
-      <p class="note">
-        Click a row to zoom to the ward.
-      </p>
+      <p class="note">Click a row to zoom to the ward</p>
     </div>
   </div>
 
-  <!-- Leaflet JS -->
+  <!-- Scripts -->
   <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
-
-  <!-- PapaParse for CSV parsing (VERY IMPORTANT) -->
   <script src="https://cdn.jsdelivr.net/npm/papaparse@5.4.1/papaparse.min.js"></script>
-
-  <!-- Your JS -->
   <script src="app.js"></script>
+
 </body>
 </html>
