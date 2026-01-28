@@ -15,6 +15,8 @@ function getColor(score) {
 let wardData = {};
 let wardLayer;
 let centroidLayer;
+let microLayer = L.layerGroup().addTo(map);
+let microSites = [];
 
 // ---------------- LOAD CSV ----------------
 Papa.parse("data/ward_data.csv", {
@@ -25,6 +27,15 @@ Papa.parse("data/ward_data.csv", {
       wardData[d.ward_id] = d;
     });
     buildTable(results.data);
+  }
+});
+Papa.parse("data/micro_sites.csv", {
+  download: true,
+  header: true,
+  dynamicTyping: true,
+  complete: results => {
+    microSites = results.data;
+    drawMicroSites();
   }
 });
 
@@ -61,6 +72,43 @@ fetch("data/wards.geojson")
   });
 
 // ---------------- TABLE ----------------
+function drawMicroSites() {
+  microLayer.clearLayers();
+
+  microSites.forEach(s => {
+    if (!s.lat || !s.lon) return;
+
+    // color by score
+    let color =
+      s.SiteScore >= 15 ? "#2ecc71" :
+      s.SiteScore >= 8  ? "#f1c40f" :
+                          "#e74c3c";
+
+    let marker = L.circleMarker([s.lat, s.lon], {
+      radius: 9,
+      color: color,
+      fillColor: color,
+      fillOpacity: 0.9,
+      weight: 2
+    });
+
+    marker.bindPopup(`
+      <div class="popup-card">
+        <h4>Site ${s.site_id}</h4>
+        <p><b>⭐ Score:</b> ${s.SiteScore.toFixed(2)}</p>
+        <hr/>
+        ☕ Cafes: ${s.CafeCount}<br/>
+        🏋️ Gyms: ${s.GymCount}<br/>
+        🚌 Bus Stops: ${s.BusStopCount}<br/>
+        <hr/>
+        <i>${s.reason}</i>
+      </div>
+    `);
+
+    marker.addTo(microLayer);
+  });
+}
+
 function buildTable(data) {
   const wrap = document.getElementById("tableWrap");
 
@@ -96,3 +144,11 @@ function buildTable(data) {
     };
   });
 }
+document.getElementById("showMicro").addEventListener("change", e => {
+  if (e.target.checked) {
+    drawMicroSites();
+  } else {
+    microLayer.clearLayers();
+  }
+});
+map.setView([12.9716, 77.6412], 13);
