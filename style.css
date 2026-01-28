@@ -23,7 +23,7 @@ body {
 
 .header p {
   margin: 4px 0 0;
-  font-size: 14px;
+  font-size: 13px;
   opacity: 0.9;
 }
 
@@ -31,9 +31,9 @@ body {
 .controls {
   display: flex;
   align-items: center;
-  gap: 16px;
+  gap: 20px;
   padding: 10px 24px;
-  background: #fff;
+  background: #ffffff;
   border-bottom: 1px solid #ddd;
   font-size: 14px;
 }
@@ -41,7 +41,13 @@ body {
 .controls label {
   display: flex;
   align-items: center;
-  gap: 6px;
+  gap: 8px;
+}
+
+.controls select {
+  padding: 4px 6px;
+  border-radius: 4px;
+  border: 1px solid #ccc;
 }
 
 /* MAIN */
