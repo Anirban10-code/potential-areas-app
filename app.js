@@ -370,3 +370,6 @@ document.getElementById("showMicro").addEventListener("change", e => {
 });
 
 map.setView([12.9716, 77.6412], 13);
+setTimeout(() => {
+  map.invalidateSize();
+}, 300);
