@@ -19,22 +19,24 @@
 
   <div class="header">
     <h2>Potential Areas Finder</h2>
-    <p>High-opportunity wards identified using satellite growth & amenity demand</p>
+    <p>Macro (city-wide) & micro (street-level) opportunity analysis</p>
   </div>
 
+  <!-- CONTROLS -->
   <div class="controls">
-    <label>Top N:</label>
-    <select id="topN">
-      <option value="10">Top 10</option>
-      <option value="20">Top 20</option>
-      <option value="50">Top 50</option>
-      <option value="100">Top 100</option>
-      <option value="9999" selected>All</option>
-    </select>
 
-    <label><input type="checkbox" id="showWards" checked /> Show Wards</label>
-    <label><input type="checkbox" id="showCentroids" checked /> Show Centroids</label>
-    <label><input type="checkbox" id="showMicro" checked /> Show Micro Sites (Indiranagar)</label>
+    <label>
+      Analysis:
+      <select id="analysisMode">
+        <option value="macro">Macro – Bangalore</option>
+        <option value="micro">Micro – Indiranagar</option>
+      </select>
+    </label>
+
+    <label>
+      <input type="checkbox" id="showGyms" />
+      Show Gyms
+    </label>
 
   </div>
 
