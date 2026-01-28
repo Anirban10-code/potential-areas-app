@@ -78,28 +78,31 @@ function drawMicroSites() {
   microSites.forEach(s => {
     if (!s.lat || !s.lon) return;
 
-    // color by score
-    let color =
-      s.SiteScore >= 15 ? "#2ecc71" :
-      s.SiteScore >= 8  ? "#f1c40f" :
-                          "#e74c3c";
+    const score = Number(s.Final_Score);
 
-    let marker = L.circleMarker([s.lat, s.lon], {
-      radius: 9,
-      color: color,
+    // color by final score
+    const color =
+      score >= 0.8 ? "#2ecc71" :
+      score >= 0.6 ? "#f1c40f" :
+                     "#e74c3c";
+
+    const marker = L.circleMarker([s.lat, s.lon], {
+      radius: 10,
+      color: "#222",
+      weight: 1.5,
       fillColor: color,
-      fillOpacity: 0.9,
-      weight: 2
+      fillOpacity: 0.9
     });
 
     marker.bindPopup(`
       <div class="popup-card">
         <h4>Site ${s.site_id}</h4>
-        <p><b>⭐ Score:</b> ${s.SiteScore.toFixed(2)}</p>
+        <b>⭐ Final Score:</b> ${score.toFixed(3)}<br/>
+        <b>🏆 Rank:</b> ${s.Rank}
         <hr/>
         ☕ Cafes: ${s.CafeCount}<br/>
         🏋️ Gyms: ${s.GymCount}<br/>
-        🚌 Bus Stops: ${s.BusStopCount}<br/>
+        🚌 Bus Stops: ${s.BusStopCount}
         <hr/>
         <i>${s.reason}</i>
       </div>
@@ -147,8 +150,10 @@ function buildTable(data) {
 document.getElementById("showMicro").addEventListener("change", e => {
   if (e.target.checked) {
     drawMicroSites();
+    map.setView([12.9716, 77.6412], 14); // Indiranagar focus
   } else {
     microLayer.clearLayers();
   }
 });
+
 map.setView([12.9716, 77.6412], 13);
