@@ -59,6 +59,7 @@ body {
 /* MAP */
 #map {
   flex: 2;
+  height: 100%;
 }
 
 /* PANEL */
