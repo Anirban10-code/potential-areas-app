@@ -191,6 +191,18 @@ function buildTable(data) {
     r.onclick = () => map.setView([r.dataset.lat, r.dataset.lon], 14);
   });
 }
+document.getElementById("goBtn").onclick = () => {
+  const q = document.getElementById("placeSearch").value;
+  if (!q) return;
+
+  fetch(`https://nominatim.openstreetmap.org/search?format=json&q=${q}, Bangalore`)
+    .then(r => r.json())
+    .then(res => {
+      if (res.length === 0) return alert("Place not found");
+      const { lat, lon } = res[0];
+      map.setView([lat, lon], 15);
+    });
+};
 
 // ================= FINAL FIX =================
 setTimeout(() => map.invalidateSize(), 300);
