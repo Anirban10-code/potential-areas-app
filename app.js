@@ -65,12 +65,16 @@ document.addEventListener("DOMContentLoaded", () => {
               const d = wardData[f.properties.ward_id];
               if (!d) return;
 
-              l.bindPopup(`
-                <b>${d.ward_name}</b><br/>
-                Score: ${(+d.Final_Balanced).toFixed(3)}<br/>
-                Cafes: ${d.CafeCount}<br/>
-                Gyms: ${d.GymCount}
-              `);
+             l.bindPopup(`
+  <div class="popup-card">
+    <h4>${d.ward_name}</h4>
+    <p><b>Opportunity Score:</b> ${(+d.Final_Balanced).toFixed(3)}</p>
+    <hr/>
+    <p><b>Why this area?</b></p>
+    <p>• ${explainWard(d)}</p>
+  </div>
+`);
+
             }
           }).addTo(wardLayer);
         });
@@ -112,15 +116,15 @@ document.addEventListener("DOMContentLoaded", () => {
         fillColor: getMicroColor(s.Final_Score),
         fillOpacity: 0.9
       })
-      .bindPopup(`
-        <b>Site ${s.site_id}</b><br/>
-        Score: ${(+s.Final_Score).toFixed(3)}<br/>
-        Rank: ${s.Rank}<hr/>
-        Cafes: ${s.CafeCount}<br/>
-        Gyms: ${s.GymCount}<br/>
-        Bus Stops: ${s.BusStopCount}<br/>
-        <i>${s.reason}</i>
-      `)
+     marker.bindPopup(`
+  <div class="popup-card">
+    <h4>Site ${s.site_id}</h4>
+    <b>Final Score:</b> ${s.Final_Score.toFixed(3)}<br/>
+    <hr/>
+    <b>Why this site?</b><br/>
+    • ${explainMicroSite(s)}
+  </div>
+`)
       .addTo(microLayer);
     });
   }
