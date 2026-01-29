@@ -1,5 +1,11 @@
 // ================= MAP =================
 const map = L.map('map').setView([12.97, 77.59], 11);
+const MICRO_AREAS = {
+  "indiranagar": {
+    center: [12.9716, 77.6412],
+    zoom: 14
+  }
+};
 
 const baseLayer = L.tileLayer(
   'https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png',
