@@ -154,6 +154,7 @@ document.addEventListener("DOMContentLoaded", () => {
   }
 
   function showMicroArea(key) {
+    document.getElementById("analysisMode").value = "micro";
     clearMicro();
     map.removeLayer(wardLayer);
 
@@ -186,7 +187,7 @@ document.addEventListener("DOMContentLoaded", () => {
       showMicroArea(q);
       return;
     }
-
+  
     // Fallback → Nominatim
     fetch(`https://nominatim.openstreetmap.org/search?format=json&limit=1&q=${encodeURIComponent(q + ", Bangalore")}`)
       .then(r => r.json())
@@ -196,6 +197,11 @@ document.addEventListener("DOMContentLoaded", () => {
         map.setView([+d[0].lat, +d[0].lon], 15);
       });
   }
+const goBtn = document.getElementById("goBtn");
+
+goBtn.addEventListener("click", () => {
+  handlePlaceSearch(placeSearch.value.trim().toLowerCase());
+});
 
   // ================= TABLE SEARCH (FILTER ONLY) =================
   const searchBox = document.getElementById("searchBox");
