@@ -1,26 +1,27 @@
 // ================= MAP =================
-const map = L.map('map').setView([12.97, 77.59], 11);
+const map = L.map("map").setView([12.97, 77.59], 11);
+
+L.tileLayer(
+  "https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png",
+  {
+    maxZoom: 19,
+    attribution: "&copy; OpenStreetMap contributors"
+  }
+).addTo(map);
+
+// ================= MICRO AREAS =================
 const MICRO_AREAS = {
-  "indiranagar": {
+  indiranagar: {
     center: [12.9716, 77.6412],
     zoom: 14
   }
 };
 
-const baseLayer = L.tileLayer(
-  'https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png',
-  {
-    maxZoom: 19,
-    attribution: '&copy; OpenStreetMap contributors'
-  }
-).addTo(map);
-
-
 // ================= COLORS =================
 function getWardColor(score) {
-  return score > 0.25 ? '#2ecc71' :
-         score > 0.18 ? '#f1c40f' :
-                        '#e74c3c';
+  return score > 0.25 ? "#2ecc71" :
+         score > 0.18 ? "#f1c40f" :
+                        "#e74c3c";
 }
 
 function getMicroColor(score) {
@@ -30,24 +31,28 @@ function getMicroColor(score) {
 }
 
 // ================= LAYERS =================
-let wardLayer = L.layerGroup().addTo(map);
-let microLayer = L.layerGroup();
-let gymLayer = L.layerGroup();
+const wardLayer = L.layerGroup().addTo(map);
+const microLayer = L.layerGroup();
+const gymLayer = L.layerGroup();
 
+// ================= DATA =================
 let wardData = {};
 let microSites = [];
 let gyms = [];
 
-// ================= LOAD WARDS =================
+// ================= LOAD WARD CSV =================
 Papa.parse("data/ward_data.csv", {
   download: true,
   header: true,
   complete: res => {
-    res.data.forEach(d => wardData[d.ward_id] = d);
-    buildTable(res.data);
+    res.data.forEach(d => {
+      if (d.ward_id) wardData[d.ward_id] = d;
+    });
+    buildWardTable(Object.values(wardData));
   }
 });
 
+// ================= LOAD WARDS GEOJSON =================
 fetch("data/wards.geojson")
   .then(r => r.json())
   .then(geojson => {
@@ -58,7 +63,7 @@ fetch("data/wards.geojson")
           fillColor: d ? getWardColor(+d.Final_Balanced) : "#ccc",
           weight: 1,
           color: "#333",
-          fillOpacity: 0.7
+          fillOpacity: 0.75
         };
       },
       onEachFeature: (f, l) => {
@@ -81,8 +86,7 @@ Papa.parse("data/micro_sites.csv", {
   header: true,
   dynamicTyping: true,
   complete: res => {
-    microSites = res.data;
-    drawMicroSites();
+    microSites = res.data.filter(s => s.lat && s.lon);
   }
 });
 
@@ -92,7 +96,7 @@ Papa.parse("data/gyms_indiranagar.csv", {
   header: true,
   dynamicTyping: true,
   complete: res => {
-    gyms = res.data;
+    gyms = res.data.filter(g => g.lat && g.lon);
   }
 });
 
@@ -101,18 +105,16 @@ function drawMicroSites() {
   microLayer.clearLayers();
 
   microSites.forEach(s => {
-    if (!s.lat || !s.lon) return;
-
     L.circleMarker([s.lat, s.lon], {
       radius: 9,
       color: "#222",
+      weight: 1.5,
       fillColor: getMicroColor(s.Final_Score),
-      fillOpacity: 0.9,
-      weight: 1.5
+      fillOpacity: 0.9
     })
     .bindPopup(`
       <b>Site ${s.site_id}</b><br/>
-      Final Score: ${s.Final_Score}<br/>
+      Score: ${(+s.Final_Score).toFixed(3)}<br/>
       Rank: ${s.Rank}<hr/>
       Cafes: ${s.CafeCount}<br/>
       Gyms: ${s.GymCount}<br/>
@@ -128,8 +130,6 @@ function drawGyms() {
   gymLayer.clearLayers();
 
   gyms.forEach(g => {
-    if (!g.lat || !g.lon) return;
-
     L.circleMarker([g.lat, g.lon], {
       radius: 5,
       color: "#1f3c88",
@@ -141,27 +141,79 @@ function drawGyms() {
   });
 }
 
-// ================= MODE SWITCH =================
-function setMode(mode) {
-  map.removeLayer(microLayer);
-  map.removeLayer(gymLayer);
+// ================= SEARCH =================
+const searchBox = document.getElementById("searchBox");
 
-  if (mode === "macro") {
-    map.setView([12.97, 77.59], 11);
+searchBox.addEventListener("keyup", e => {
+  if (e.key === "Enter") {
+    handleSearch(searchBox.value.trim().toLowerCase());
+  }
+});
+
+function handleSearch(query) {
+  if (!query) return;
+
+  // ---------- MICRO ----------
+  if (MICRO_AREAS[query]) {
+    showMicroArea(query);
+    return;
   }
 
-  if (mode === "micro") {
-    map.addLayer(microLayer);
-    map.setView([12.9716, 77.6412], 14);
+  // ---------- MACRO ----------
+  const ward = Object.values(wardData).find(w =>
+    w.ward_name && w.ward_name.toLowerCase().includes(query)
+  );
+
+  if (ward) {
+    clearMicro();
+    map.addLayer(wardLayer);
+    map.setView([ward.centroid_lat, ward.centroid_lon], 14);
+    buildWardTable(Object.values(wardData));
+  } else {
+    alert("Location not found. Try a ward name or 'Indiranagar'");
   }
 }
 
+// ================= SHOW MICRO =================
+function showMicroArea(key) {
+  clearMicro();
+  map.removeLayer(wardLayer);
+
+  drawMicroSites();
+  map.addLayer(microLayer);
+
+  if (document.getElementById("showGyms").checked) {
+    drawGyms();
+    map.addLayer(gymLayer);
+  }
+
+  const area = MICRO_AREAS[key];
+  map.setView(area.center, area.zoom);
+
+  buildMicroTable();
+}
+
+// ================= CLEAR MICRO =================
+function clearMicro() {
+  map.removeLayer(microLayer);
+  map.removeLayer(gymLayer);
+}
+
+// ================= MODE SWITCH =================
 document.getElementById("analysisMode").addEventListener("change", e => {
-  setMode(e.target.value);
+  if (e.target.value === "macro") {
+    clearMicro();
+    map.addLayer(wardLayer);
+    map.setView([12.97, 77.59], 11);
+    buildWardTable(Object.values(wardData));
+  } else {
+    showMicroArea("indiranagar");
+  }
 });
 
+// ================= GYM TOGGLE =================
 document.getElementById("showGyms").addEventListener("change", e => {
-  if (e.target.checked) {
+  if (e.target.checked && map.hasLayer(microLayer)) {
     drawGyms();
     map.addLayer(gymLayer);
   } else {
@@ -169,17 +221,17 @@ document.getElementById("showGyms").addEventListener("change", e => {
   }
 });
 
-// ================= TABLE =================
-function buildTable(data) {
+// ================= TABLES =================
+function buildWardTable(data) {
   const wrap = document.getElementById("tableWrap");
 
   const sorted = data
     .filter(d => d.ward_name)
     .sort((a, b) => b.Final_Balanced - a.Final_Balanced);
 
-  let html = `<table><thead>
-    <tr><th>#</th><th>Ward</th><th>Score</th></tr>
-  </thead><tbody>`;
+  let html = `<table>
+    <thead><tr><th>#</th><th>Ward</th><th>Score</th></tr></thead>
+    <tbody>`;
 
   sorted.forEach((d, i) => {
     html += `
@@ -197,55 +249,32 @@ function buildTable(data) {
     r.onclick = () => map.setView([r.dataset.lat, r.dataset.lon], 14);
   });
 }
-const searchInput = document.getElementById("placeSearch");
-const goBtn = document.getElementById("goBtn");
 
-goBtn.addEventListener("click", searchPlace);
+function buildMicroTable() {
+  const wrap = document.getElementById("tableWrap");
 
-// allow Enter key
-searchInput.addEventListener("keypress", e => {
-  if (e.key === "Enter") searchPlace();
-});
+  const sorted = [...microSites].sort((a, b) => b.Final_Score - a.Final_Score);
 
-function searchPlace() {
-  const q = searchInput.value.trim();
-  if (!q) {
-    alert("Please enter a place name");
-    return;
-  }
+  let html = `<table>
+    <thead><tr><th>Rank</th><th>Site</th><th>Score</th></tr></thead>
+    <tbody>`;
 
-  fetch(
-    `https://nominatim.openstreetmap.org/search?format=json&limit=1&q=${encodeURIComponent(q + ", Bangalore")}`
-  )
-    .then(res => res.json())
-    .then(data => {
-      if (!data || data.length === 0) {
-        alert("Place not found");
-        return;
-      }
+  sorted.forEach(s => {
+    html += `
+      <tr data-lat="${s.lat}" data-lon="${s.lon}">
+        <td>${s.Rank}</td>
+        <td>${s.reason}</td>
+        <td>${(+s.Final_Score).toFixed(3)}</td>
+      </tr>`;
+  });
 
-      const lat = parseFloat(data[0].lat);
-      const lon = parseFloat(data[0].lon);
+  html += "</tbody></table>";
+  wrap.innerHTML = html;
 
-      map.setView([lat, lon], 15);
-
-      // optional marker
-      L.marker([lat, lon])
-        .addTo(map)
-        .bindPopup(`<b>${q}</b>`)
-        .openPopup();
-
-      // important: fix map rendering
-      setTimeout(() => {
-        map.invalidateSize();
-      }, 200);
-    })
-    .catch(err => {
-      console.error(err);
-      alert("Search failed");
-    });
+  wrap.querySelectorAll("tr").forEach(r => {
+    r.onclick = () => map.setView([r.dataset.lat, r.dataset.lon], 17);
+  });
 }
-
 
 // ================= FINAL FIX =================
 setTimeout(() => map.invalidateSize(), 300);
