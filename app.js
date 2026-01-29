@@ -191,18 +191,55 @@ function buildTable(data) {
     r.onclick = () => map.setView([r.dataset.lat, r.dataset.lon], 14);
   });
 }
-document.getElementById("goBtn").onclick = () => {
-  const q = document.getElementById("placeSearch").value;
-  if (!q) return;
+const searchInput = document.getElementById("placeSearch");
+const goBtn = document.getElementById("goBtn");
 
-  fetch(`https://nominatim.openstreetmap.org/search?format=json&q=${q}, Bangalore`)
-    .then(r => r.json())
-    .then(res => {
-      if (res.length === 0) return alert("Place not found");
-      const { lat, lon } = res[0];
+goBtn.addEventListener("click", searchPlace);
+
+// allow Enter key
+searchInput.addEventListener("keypress", e => {
+  if (e.key === "Enter") searchPlace();
+});
+
+function searchPlace() {
+  const q = searchInput.value.trim();
+  if (!q) {
+    alert("Please enter a place name");
+    return;
+  }
+
+  fetch(
+    `https://nominatim.openstreetmap.org/search?format=json&limit=1&q=${encodeURIComponent(q + ", Bangalore")}`
+  )
+    .then(res => res.json())
+    .then(data => {
+      if (!data || data.length === 0) {
+        alert("Place not found");
+        return;
+      }
+
+      const lat = parseFloat(data[0].lat);
+      const lon = parseFloat(data[0].lon);
+
       map.setView([lat, lon], 15);
+
+      // optional marker
+      L.marker([lat, lon])
+        .addTo(map)
+        .bindPopup(`<b>${q}</b>`)
+        .openPopup();
+
+      // important: fix map rendering
+      setTimeout(() => {
+        map.invalidateSize();
+      }, 200);
+    })
+    .catch(err => {
+      console.error(err);
+      alert("Search failed");
     });
-};
+}
+
 
 // ================= FINAL FIX =================
 setTimeout(() => map.invalidateSize(), 300);
