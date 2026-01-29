@@ -1,4 +1,5 @@
 // ================= MAP =================
+document.addEventListener("DOMContentLoaded", () => {
 const map = L.map("map").setView([12.97, 77.59], 11);
 
 L.tileLayer("https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png", {
@@ -292,3 +293,4 @@ function buildMicroTable() {
 
 // ================= FINAL FIX =================
 setTimeout(() => map.invalidateSize(), 300);
+});
