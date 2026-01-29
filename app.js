@@ -153,11 +153,30 @@ searchBox.addEventListener("keyup", e => {
 function handleSearch(query) {
   if (!query) return;
 
-  // ---------- MICRO ----------
-  if (MICRO_AREAS[query]) {
-    showMicroArea(query);
+  const q = query.toLowerCase();
+
+  // ================= MICRO AREA (FIRST PRIORITY) =================
+  if (MICRO_AREAS[q]) {
+    showMicroArea(q);
+    document.getElementById("analysisMode").value = "micro";
     return;
   }
+
+  // ================= MACRO WARD SEARCH =================
+  const ward = Object.values(wardData).find(w =>
+    w.ward_name && w.ward_name.toLowerCase().includes(q)
+  );
+
+  if (ward) {
+    setMode("macro");
+    map.setView([ward.centroid_lat, ward.centroid_lon], 14);
+    return;
+  }
+
+  // ================= FALLBACK: NORMAL PLACE SEARCH =================
+  searchPlaceByName(q);
+}
+
 
   // ---------- MACRO ----------
   const ward = Object.values(wardData).find(w =>
