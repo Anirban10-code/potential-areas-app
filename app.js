@@ -2,9 +2,13 @@
 const map = L.map('map').setView([12.97, 77.59], 11);
 
 const baseLayer = L.tileLayer(
-  'https://{s}.basemaps.cartocdn.com/light_all/{z}/{x}/{y}{r}.png',
-  { attribution: '&copy; OpenStreetMap & Carto' }
+  'https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png',
+  {
+    maxZoom: 19,
+    attribution: '&copy; OpenStreetMap contributors'
+  }
 ).addTo(map);
+
 
 // ================= COLORS =================
 function getWardColor(score) {
