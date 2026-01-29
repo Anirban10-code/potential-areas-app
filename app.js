@@ -230,6 +230,23 @@ goBtn.addEventListener("click", () => {
       map.removeLayer(gymLayer);
     }
   });
+function explainMicroSite(s) {
+  let reasons = [];
+
+  if (s.CafeCount >= 20)
+    reasons.push("High cafe density indicates strong footfall");
+
+  if (s.GymCount >= 5)
+    reasons.push("Good presence of gyms suggests health-conscious users");
+
+  if (s.BusStopCount >= 5)
+    reasons.push("Strong public transport accessibility");
+
+  if (s.reason)
+    reasons.push(s.reason);
+
+  return reasons.join("<br/>• ");
+}
 
   // ================= TABLES =================
   function buildWardTable(data) {
