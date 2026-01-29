@@ -1,13 +1,10 @@
 // ================= MAP =================
 const map = L.map("map").setView([12.97, 77.59], 11);
 
-L.tileLayer(
-  "https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png",
-  {
-    maxZoom: 19,
-    attribution: "&copy; OpenStreetMap contributors"
-  }
-).addTo(map);
+L.tileLayer("https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png", {
+  maxZoom: 19,
+  attribution: "&copy; OpenStreetMap contributors"
+}).addTo(map);
 
 // ================= MICRO AREAS =================
 const MICRO_AREAS = {
@@ -86,7 +83,13 @@ Papa.parse("data/micro_sites.csv", {
   header: true,
   dynamicTyping: true,
   complete: res => {
-    microSites = res.data.filter(s => s.lat && s.lon);
+    microSites = res.data
+      .map(s => ({
+        ...s,
+        lat: Number(s.lat),
+        lon: Number(s.lon)
+      }))
+      .filter(s => !isNaN(s.lat) && !isNaN(s.lon));
   }
 });
 
@@ -96,7 +99,13 @@ Papa.parse("data/gyms_indiranagar.csv", {
   header: true,
   dynamicTyping: true,
   complete: res => {
-    gyms = res.data.filter(g => g.lat && g.lon);
+    gyms = res.data
+      .map(g => ({
+        ...g,
+        lat: Number(g.lat),
+        lon: Number(g.lon)
+      }))
+      .filter(g => !isNaN(g.lat) && !isNaN(g.lon));
   }
 });
 
@@ -150,47 +159,28 @@ searchBox.addEventListener("keyup", e => {
   }
 });
 
-function handleSearch(query) {
-  if (!query) return;
+function handleSearch(q) {
+  if (!q) return;
 
-  const q = query.toLowerCase();
-
-  // ================= MICRO AREA (FIRST PRIORITY) =================
+  // ---- MICRO FIRST ----
   if (MICRO_AREAS[q]) {
-    showMicroArea(q);
     document.getElementById("analysisMode").value = "micro";
+    showMicroArea(q);
     return;
   }
 
-  // ================= MACRO WARD SEARCH =================
+  // ---- MACRO WARD ----
   const ward = Object.values(wardData).find(w =>
     w.ward_name && w.ward_name.toLowerCase().includes(q)
   );
 
   if (ward) {
-    setMode("macro");
+    setMacroMode();
     map.setView([ward.centroid_lat, ward.centroid_lon], 14);
     return;
   }
 
-  // ================= FALLBACK: NORMAL PLACE SEARCH =================
-  searchPlaceByName(q);
-}
-
-
-  // ---------- MACRO ----------
-  const ward = Object.values(wardData).find(w =>
-    w.ward_name && w.ward_name.toLowerCase().includes(query)
-  );
-
-  if (ward) {
-    clearMicro();
-    map.addLayer(wardLayer);
-    map.setView([ward.centroid_lat, ward.centroid_lon], 14);
-    buildWardTable(Object.values(wardData));
-  } else {
-    alert("Location not found. Try a ward name or 'Indiranagar'");
-  }
+  alert("Location not found. Try a ward name or 'Indiranagar'");
 }
 
 // ================= SHOW MICRO =================
@@ -212,6 +202,14 @@ function showMicroArea(key) {
   buildMicroTable();
 }
 
+// ================= MACRO MODE =================
+function setMacroMode() {
+  clearMicro();
+  map.addLayer(wardLayer);
+  map.setView([12.97, 77.59], 11);
+  buildWardTable(Object.values(wardData));
+}
+
 // ================= CLEAR MICRO =================
 function clearMicro() {
   map.removeLayer(microLayer);
@@ -221,10 +219,7 @@ function clearMicro() {
 // ================= MODE SWITCH =================
 document.getElementById("analysisMode").addEventListener("change", e => {
   if (e.target.value === "macro") {
-    clearMicro();
-    map.addLayer(wardLayer);
-    map.setView([12.97, 77.59], 11);
-    buildWardTable(Object.values(wardData));
+    setMacroMode();
   } else {
     showMicroArea("indiranagar");
   }
