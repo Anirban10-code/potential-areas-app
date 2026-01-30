@@ -1,6 +1,6 @@
 document.addEventListener("DOMContentLoaded", () => {
 
-  // ================= MAP =================
+  /* ================= MAP ================= */
   const map = L.map("map").setView([12.97, 77.59], 11);
 
   L.tileLayer("https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png", {
@@ -8,7 +8,7 @@ document.addEventListener("DOMContentLoaded", () => {
     attribution: "&copy; OpenStreetMap contributors"
   }).addTo(map);
 
-  // ================= MICRO AREAS =================
+  /* ================= MICRO AREAS ================= */
   const MICRO_AREAS = {
     indiranagar: {
       center: [12.9716, 77.6412],
@@ -16,7 +16,7 @@ document.addEventListener("DOMContentLoaded", () => {
     }
   };
 
-  // ================= COLORS =================
+  /* ================= COLORS ================= */
   const getWardColor = s =>
     s > 0.25 ? "#2ecc71" :
     s > 0.18 ? "#f1c40f" :
@@ -27,17 +27,35 @@ document.addEventListener("DOMContentLoaded", () => {
     s >= 0.6 ? "#f1c40f" :
                "#e74c3c";
 
-  // ================= LAYERS =================
+  /* ================= LAYERS ================= */
   const wardLayer  = L.layerGroup().addTo(map);
   const microLayer = L.layerGroup();
   const gymLayer   = L.layerGroup();
 
-  // ================= DATA =================
-  let wardData   = {};
+  /* ================= DATA ================= */
+  let wardData = {};
   let microSites = [];
-  let gyms       = [];
+  let gyms = [];
 
-  // ================= LOAD WARDS CSV =================
+  /* ================= EXPLANATIONS ================= */
+  function explainWard(d) {
+    let r = [];
+    if (+d.CafeCount >= 5) r.push("High cafe density → strong lifestyle demand");
+    if (+d.GymCount >= 3) r.push("Good gym presence → fitness-oriented users");
+    if (+d.Final_Balanced > 0.25) r.push("High overall opportunity score");
+    return r.length ? r.join("<br/>• ") : "Moderate growth indicators";
+  }
+
+  function explainMicroSite(s) {
+    let r = [];
+    if (s.CafeCount >= 20) r.push("Heavy cafe clustering → strong footfall");
+    if (s.GymCount >= 5) r.push("Multiple gyms nearby → target users present");
+    if (s.BusStopCount >= 5) r.push("Excellent public transport access");
+    if (s.reason) r.push(s.reason);
+    return r.join("<br/>• ");
+  }
+
+  /* ================= LOAD WARDS CSV ================= */
   Papa.parse("data/ward_data.csv", {
     download: true,
     header: true,
@@ -47,7 +65,6 @@ document.addEventListener("DOMContentLoaded", () => {
       });
       buildWardTable(Object.values(wardData));
 
-      // Load GeoJSON AFTER CSV
       fetch("data/wards.geojson")
         .then(r => r.json())
         .then(geojson => {
@@ -65,23 +82,22 @@ document.addEventListener("DOMContentLoaded", () => {
               const d = wardData[f.properties.ward_id];
               if (!d) return;
 
-             l.bindPopup(`
-  <div class="popup-card">
-    <h4>${d.ward_name}</h4>
-    <p><b>Opportunity Score:</b> ${(+d.Final_Balanced).toFixed(3)}</p>
-    <hr/>
-    <p><b>Why this area?</b></p>
-    <p>• ${explainWard(d)}</p>
-  </div>
-`);
-
+              l.bindPopup(`
+                <div class="popup-card">
+                  <h4>${d.ward_name}</h4>
+                  <b>Score:</b> ${(+d.Final_Balanced).toFixed(3)}
+                  <hr/>
+                  <b>Why this area?</b><br/>
+                  • ${explainWard(d)}
+                </div>
+              `);
             }
           }).addTo(wardLayer);
         });
     }
   });
 
-  // ================= LOAD MICRO SITES =================
+  /* ================= LOAD MICRO SITES ================= */
   Papa.parse("data/micro_sites.csv", {
     download: true,
     header: true,
@@ -93,7 +109,7 @@ document.addEventListener("DOMContentLoaded", () => {
     }
   });
 
-  // ================= LOAD GYMS =================
+  /* ================= LOAD GYMS ================= */
   Papa.parse("data/gyms_indiranagar.csv", {
     download: true,
     header: true,
@@ -105,31 +121,34 @@ document.addEventListener("DOMContentLoaded", () => {
     }
   });
 
-  // ================= DRAW MICRO =================
+  /* ================= DRAW MICRO ================= */
   function drawMicroSites() {
     microLayer.clearLayers();
+
     microSites.forEach(s => {
-      L.circleMarker([s.lat, s.lon], {
+      const marker = L.circleMarker([s.lat, s.lon], {
         radius: 9,
         color: "#222",
         weight: 1.5,
         fillColor: getMicroColor(s.Final_Score),
         fillOpacity: 0.9
-      })
-     marker.bindPopup(`
-  <div class="popup-card">
-    <h4>Site ${s.site_id}</h4>
-    <b>Final Score:</b> ${s.Final_Score.toFixed(3)}<br/>
-    <hr/>
-    <b>Why this site?</b><br/>
-    • ${explainMicroSite(s)}
-  </div>
-`)
-      .addTo(microLayer);
+      });
+
+      marker.bindPopup(`
+        <div class="popup-card">
+          <h4>Site ${s.site_id}</h4>
+          <b>Final Score:</b> ${(+s.Final_Score).toFixed(3)}
+          <hr/>
+          <b>Why this site?</b><br/>
+          • ${explainMicroSite(s)}
+        </div>
+      `);
+
+      marker.addTo(microLayer);
     });
   }
 
-  // ================= DRAW GYMS =================
+  /* ================= DRAW GYMS ================= */
   function drawGyms() {
     gymLayer.clearLayers();
     gyms.forEach(g => {
@@ -144,7 +163,7 @@ document.addEventListener("DOMContentLoaded", () => {
     });
   }
 
-  // ================= MODE HELPERS =================
+  /* ================= MODE HELPERS ================= */
   function clearMicro() {
     map.removeLayer(microLayer);
     map.removeLayer(gymLayer);
@@ -175,24 +194,18 @@ document.addEventListener("DOMContentLoaded", () => {
     buildMicroTable();
   }
 
-  // ================= PLACE SEARCH =================
+  /* ================= PLACE SEARCH ================= */
   const placeSearch = document.getElementById("placeSearch");
-
-  placeSearch.addEventListener("keypress", e => {
-    if (e.key === "Enter") handlePlaceSearch(placeSearch.value.trim().toLowerCase());
-  });
+  const goBtn = document.getElementById("goBtn");
 
   function handlePlaceSearch(q) {
     if (!q) return;
 
-    // Known micro areas
     if (MICRO_AREAS[q]) {
-      document.getElementById("analysisMode").value = "micro";
       showMicroArea(q);
       return;
     }
-  
-    // Fallback → Nominatim
+
     fetch(`https://nominatim.openstreetmap.org/search?format=json&limit=1&q=${encodeURIComponent(q + ", Bangalore")}`)
       .then(r => r.json())
       .then(d => {
@@ -201,58 +214,33 @@ document.addEventListener("DOMContentLoaded", () => {
         map.setView([+d[0].lat, +d[0].lon], 15);
       });
   }
-const goBtn = document.getElementById("goBtn");
 
-goBtn.addEventListener("click", () => {
-  handlePlaceSearch(placeSearch.value.trim().toLowerCase());
-});
+  placeSearch.addEventListener("keypress", e => {
+    if (e.key === "Enter") handlePlaceSearch(placeSearch.value.trim().toLowerCase());
+  });
 
-  // ================= TABLE SEARCH (FILTER ONLY) =================
-  const searchBox = document.getElementById("searchBox");
-  searchBox.addEventListener("input", () => {
-    const q = searchBox.value.toLowerCase();
+  goBtn.addEventListener("click", () => {
+    handlePlaceSearch(placeSearch.value.trim().toLowerCase());
+  });
+
+  /* ================= TABLE FILTER ================= */
+  document.getElementById("searchBox").addEventListener("input", e => {
+    const q = e.target.value.toLowerCase();
     document.querySelectorAll("#tableWrap tbody tr").forEach(r => {
       r.style.display = r.innerText.toLowerCase().includes(q) ? "" : "none";
     });
   });
 
-  // ================= MODE SWITCH =================
+  /* ================= MODE SWITCH ================= */
   document.getElementById("analysisMode").addEventListener("change", e => {
     e.target.value === "macro" ? setMacroMode() : showMicroArea("indiranagar");
   });
 
-  // ================= GYM TOGGLE =================
-  document.getElementById("showGyms").addEventListener("change", e => {
-    if (e.target.checked && map.hasLayer(microLayer)) {
-      drawGyms();
-      map.addLayer(gymLayer);
-    } else {
-      map.removeLayer(gymLayer);
-    }
-  });
-function explainMicroSite(s) {
-  let reasons = [];
-
-  if (s.CafeCount >= 20)
-    reasons.push("High cafe density indicates strong footfall");
-
-  if (s.GymCount >= 5)
-    reasons.push("Good presence of gyms suggests health-conscious users");
-
-  if (s.BusStopCount >= 5)
-    reasons.push("Strong public transport accessibility");
-
-  if (s.reason)
-    reasons.push(s.reason);
-
-  return reasons.join("<br/>• ");
-}
-
-  // ================= TABLES =================
+  /* ================= TABLES ================= */
   function buildWardTable(data) {
     const wrap = document.getElementById("tableWrap");
     const sorted = data.filter(d => d.ward_name)
-      .sort((a, b) => b.Final_Balanced - a.Final_Balanced);
+      .sort((a,b)=>b.Final_Balanced-a.Final_Balanced);
 
     wrap.innerHTML = `
       <table>
@@ -265,12 +253,7 @@ function explainMicroSite(s) {
               <td>${(+d.Final_Balanced).toFixed(3)}</td>
             </tr>`).join("")}
         </tbody>
-      </table>
-    `;
-
-    wrap.querySelectorAll("tr[data-lat]").forEach(r => {
-      r.onclick = () => map.setView([r.dataset.lat, r.dataset.lon], 14);
-    });
+      </table>`;
   }
 
   function buildMicroTable() {
@@ -288,12 +271,7 @@ function explainMicroSite(s) {
               <td>${(+s.Final_Score).toFixed(3)}</td>
             </tr>`).join("")}
         </tbody>
-      </table>
-    `;
-
-    wrap.querySelectorAll("tr[data-lat]").forEach(r => {
-      r.onclick = () => map.setView([r.dataset.lat, r.dataset.lon], 17);
-    });
+      </table>`;
   }
 
   setTimeout(() => map.invalidateSize(), 300);
