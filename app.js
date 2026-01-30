@@ -82,15 +82,20 @@ document.addEventListener("DOMContentLoaded", () => {
               const d = wardData[f.properties.ward_id];
               if (!d) return;
 
-              l.bindPopup(`
-                <div class="popup-card">
-                  <h4>${d.ward_name}</h4>
-                  <b>Score:</b> ${(+d.Final_Balanced).toFixed(3)}
-                  <hr/>
-                  <b>Why this area?</b><br/>
-                  • ${explainWard(d)}
-                </div>
-              `);
+              l.on("click", () => {
+               updateInfoPanel(
+    d.ward_name,
+    "Macro (Ward)",
+    (+d.Final_Balanced).toFixed(3),
+    explainWard(d).split("<br/>• "),
+    {
+      Cafes: d.CafeCount,
+      Gyms: d.GymCount,
+      Opportunity: d.Final_Balanced
+    }
+  );
+});
+
             }
           }).addTo(wardLayer);
         });
@@ -143,6 +148,19 @@ document.addEventListener("DOMContentLoaded", () => {
           • ${explainMicroSite(s)}
         </div>
       `);
+      marker.on("click", () => {
+  updateInfoPanel(
+    `Site ${s.site_id}`,
+    "Micro (Street-level)",
+    (+s.Final_Score).toFixed(3),
+    explainMicroSite(s).split("<br/>• "),
+    {
+      Cafes: s.CafeCount,
+      Gyms: s.GymCount,
+      BusStops: s.BusStopCount
+    }
+  );
+});
 
       marker.addTo(microLayer);
     });
@@ -268,17 +286,42 @@ document.addEventListener("DOMContentLoaded", () => {
     </table>
   `;
 
-  wrap.querySelectorAll(".ward-row").forEach(row => {
-    row.addEventListener("click", () => {
-      const lat = Number(row.dataset.lat);
-      const lon = Number(row.dataset.lon);
+wrap.querySelectorAll(".ward-row").forEach(row => {
+  row.addEventListener("click", () => {
+    const lat = Number(row.dataset.lat);
+    const lon = Number(row.dataset.lon);
 
-      if (!isNaN(lat) && !isNaN(lon)) {
-        setMacroMode(); // ⭐ THIS WAS THE MISSING LINE
-        map.setView([lat, lon], 14, { animate: true });
-      }
-    });
+    if (!isNaN(lat) && !isNaN(lon)) {
+      map.setView([lat, lon], 14, { animate: true });
+    }
   });
+});
+
+}
+function updateInfoPanel(title, type, score, reasons, metrics) {
+  const panel = document.getElementById("infoContent");
+
+  panel.innerHTML = `
+    <div class="info-section">
+      <h4>${title}</h4>
+      <div class="badge">${type}</div>
+      <div class="info-metric"><b>Score:</b> ${score}</div>
+    </div>
+
+    <div class="info-section">
+      <h4>Why this area?</h4>
+      <ul>
+        ${reasons.map(r => `<li>${r}</li>`).join("")}
+      </ul>
+    </div>
+
+    <div class="info-section">
+      <h4>Key Metrics</h4>
+      ${Object.entries(metrics).map(
+        ([k,v]) => `<div class="info-metric"><b>${k}:</b> ${v}</div>`
+      ).join("")}
+    </div>
+  `;
 }
 
 
@@ -299,6 +342,17 @@ document.addEventListener("DOMContentLoaded", () => {
             </tr>`).join("")}
         </tbody>
       </table>`;
+    wrap.querySelectorAll("tr[data-lat]").forEach(row => {
+  row.addEventListener("click", () => {
+    const lat = Number(row.dataset.lat);
+    const lon = Number(row.dataset.lon);
+
+    if (!isNaN(lat) && !isNaN(lon)) {
+      map.setView([lat, lon], 17, { animate: true });
+    }
+  });
+});
+
   }
 
   setTimeout(() => map.invalidateSize(), 300);
