@@ -237,7 +237,8 @@ document.addEventListener("DOMContentLoaded", () => {
   });
 
   /* ================= TABLES ================= */
-function buildWardTable(data) {
+
+  function buildWardTable(data) {
   const wrap = document.getElementById("tableWrap");
 
   const sorted = data
@@ -255,10 +256,9 @@ function buildWardTable(data) {
       </thead>
       <tbody>
         ${sorted.map((d, i) => `
-          <tr 
-            class="ward-row"
-            data-lat="${d.centroid_lat}" 
-            data-lon="${d.centroid_lon}">
+          <tr class="ward-row"
+              data-lat="${d.centroid_lat}"
+              data-lon="${d.centroid_lon}">
             <td>${i + 1}</td>
             <td>${d.ward_name}</td>
             <td>${(+d.Final_Balanced).toFixed(3)}</td>
@@ -268,18 +268,19 @@ function buildWardTable(data) {
     </table>
   `;
 
-  // ✅ THIS PART WAS MISSING
   wrap.querySelectorAll(".ward-row").forEach(row => {
     row.addEventListener("click", () => {
       const lat = Number(row.dataset.lat);
       const lon = Number(row.dataset.lon);
 
       if (!isNaN(lat) && !isNaN(lon)) {
+        setMacroMode(); // ⭐ THIS WAS THE MISSING LINE
         map.setView([lat, lon], 14, { animate: true });
       }
     });
   });
 }
+
 
 
   function buildMicroTable() {
