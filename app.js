@@ -237,24 +237,50 @@ document.addEventListener("DOMContentLoaded", () => {
   });
 
   /* ================= TABLES ================= */
-  function buildWardTable(data) {
-    const wrap = document.getElementById("tableWrap");
-    const sorted = data.filter(d => d.ward_name)
-      .sort((a,b)=>b.Final_Balanced-a.Final_Balanced);
+function buildWardTable(data) {
+  const wrap = document.getElementById("tableWrap");
 
-    wrap.innerHTML = `
-      <table>
-        <thead><tr><th>#</th><th>Ward</th><th>Score</th></tr></thead>
-        <tbody>
-          ${sorted.map((d,i)=>`
-            <tr data-lat="${d.centroid_lat}" data-lon="${d.centroid_lon}">
-              <td>${i+1}</td>
-              <td>${d.ward_name}</td>
-              <td>${(+d.Final_Balanced).toFixed(3)}</td>
-            </tr>`).join("")}
-        </tbody>
-      </table>`;
-  }
+  const sorted = data
+    .filter(d => d.ward_name)
+    .sort((a, b) => b.Final_Balanced - a.Final_Balanced);
+
+  wrap.innerHTML = `
+    <table>
+      <thead>
+        <tr>
+          <th>#</th>
+          <th>Ward</th>
+          <th>Score</th>
+        </tr>
+      </thead>
+      <tbody>
+        ${sorted.map((d, i) => `
+          <tr 
+            class="ward-row"
+            data-lat="${d.centroid_lat}" 
+            data-lon="${d.centroid_lon}">
+            <td>${i + 1}</td>
+            <td>${d.ward_name}</td>
+            <td>${(+d.Final_Balanced).toFixed(3)}</td>
+          </tr>
+        `).join("")}
+      </tbody>
+    </table>
+  `;
+
+  // ✅ THIS PART WAS MISSING
+  wrap.querySelectorAll(".ward-row").forEach(row => {
+    row.addEventListener("click", () => {
+      const lat = Number(row.dataset.lat);
+      const lon = Number(row.dataset.lon);
+
+      if (!isNaN(lat) && !isNaN(lon)) {
+        map.setView([lat, lon], 14, { animate: true });
+      }
+    });
+  });
+}
+
 
   function buildMicroTable() {
     const wrap = document.getElementById("tableWrap");
