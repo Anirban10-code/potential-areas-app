@@ -8,6 +8,45 @@ body {
   background: #f4f6f8;
   color: #222;
 }
+#infoPanel {
+  flex: 1;
+  background: #ffffff;
+  border-left: 1px solid #ddd;
+  padding: 14px;
+  overflow-y: auto;
+}
+
+#infoPanel h3 {
+  margin-top: 0;
+  font-weight: 600;
+  border-bottom: 1px solid #eee;
+  padding-bottom: 6px;
+}
+
+.info-section {
+  margin-bottom: 14px;
+}
+
+.info-section h4 {
+  margin: 6px 0;
+  font-size: 14px;
+  color: #444;
+}
+
+.info-metric {
+  font-size: 13px;
+  margin: 4px 0;
+}
+
+.badge {
+  display: inline-block;
+  padding: 3px 8px;
+  border-radius: 12px;
+  font-size: 12px;
+  background: #eef2f7;
+  margin-right: 6px;
+}
+
 .legend {
   position: absolute;
   bottom: 20px;
